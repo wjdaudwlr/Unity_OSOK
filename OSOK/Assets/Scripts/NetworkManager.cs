@@ -7,59 +7,33 @@ using UnityEngine.UI;
 
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
+    [Header("DisconnectPanel")]
     public InputField NickNameInput;
-    public GameObject MainPanel;
-    public GameObject RespawnPanel;
-    public GameObject PickRoomPanel;
-    public Player player;
 
-    public int playerNum;
+    [Header("LobbyPanel")]
+    public GameObject LobbyPanel;
+    public InputField RoomInput;
+    public Text WelcomeText;
+    public Text LobbyInfoText;
+    public Button[] CellBtn;
+    public Button PreviousBtn;
+    public Button NextBtn;
+
+    [Header("RoomPanel")]
+    public GameObject RoomPanel;
+    public Text ListText;
+    public Text RoomInfoText;
+    public Text[] ChatText;
+    public InputField ChatInput;
+
+    [Header("ETC")]
+    public Text StatusText;
+    public PhotonView PV;
+
+    List<RoomInfo> myList = new List<RoomInfo>();
+    int currentPage = 1, maxPage, multiple;
 
 
-    private void Awake()
-    {
-        Screen.SetResolution(960, 540,false);
-        PhotonNetwork.SendRate = 60;
-        PhotonNetwork.SerializationRate = 30;
-    }
-
-
-
-    public override void OnConnectedToMaster()
-    {
-        PhotonNetwork.JoinOrCreateRoom("Room", new RoomOptions { MaxPlayers = 3 }, null);
-    }
-
-    public override void OnJoinedRoom() {
-        PickRoomPanel.SetActive(false);
-        Spawn();
-        Debug.Log(PhotonNetwork.LocalPlayer.ActorNumber); // 플레이어 번호
-    }
-
-    public void GameStart()
-    {
-        MainPanel.SetActive(false);
-        PickRoomPanel.SetActive(true);
-    }
-
-    public void GunnerBtn()
-    {
-        player.champ = Player.Champion.Gunner;
-        Debug.Log("거너");
-        PhotonNetwork.ConnectUsingSettings();
-    }
-
-    public void WarriorBtn()
-    {
-        player.champ = Player.Champion.Warrior;
-        Debug.Log("워리어");
-        PhotonNetwork.ConnectUsingSettings();
-    }
-
-    void Spawn()
-    {
-        PhotonNetwork.Instantiate("Player", Vector3.zero, Quaternion.identity);
-    }
 
 
 

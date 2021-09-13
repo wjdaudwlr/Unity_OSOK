@@ -11,7 +11,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
 
     public Bullet bullet;
     public GameObject Attack;
-    private SpriteRenderer renderer;
+    SpriteRenderer renderer;
     Rigidbody2D rigid;
 
     public float speed;
@@ -44,31 +44,29 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
         renderer = GetComponent<SpriteRenderer>();
         rigid = GetComponent<Rigidbody2D>();
 
-        renderer.color = PV.IsMine ? Color.green : Color.red;
+        renderer.color = PV.IsMine ? Color.green : Color.red; // 상대는 빨간 나는 초록
 
-        if (PV.IsMine)
+        if (PV.IsMine) // 카메라 따라다니기
         {
-            var CM = GameObject.Find("CMCamera").GetComponent<CinemachineVirtualCamera>(); // 카메라 따라다니기
+            var CM = GameObject.Find("CMCamera").GetComponent<CinemachineVirtualCamera>(); 
             CM.Follow = transform;
             CM.LookAt = transform;
         }
 
 
-        if (PV.IsMine) if (champ == Champion.Warrior) PV.RPC("WarriorAttackOn", RpcTarget.AllBuffered);
+        if (PV.IsMine) if (champ == Champion.Warrior) PV.RPC("WarriorAttackOn", RpcTarget.AllBuffered); // 워리어면 무기 생성
 
-        skill1CurTime = new float[skill1CoolTiem.Length];
+        skill1CurTime = new float[skill1CoolTiem.Length]; // 챔피언 수에 맞춰 쿨타임 생성
         skill2CurTime = new float[skill2CoolTiem.Length];
     }
-
-
-
-
 
 
     void Update()
     {
         if (PV.IsMine)
         {
+          
+
             // 이동 
             float h = Input.GetAxisRaw("Horizontal");
             float v = Input.GetAxisRaw("Vertical");
@@ -123,23 +121,20 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     }
 
 
-    public void Hit()
+    public void Hit() // 플레이어 히트
     {
         PV.RPC("DieRPC",RpcTarget.AllBuffered);
         PhotonNetwork.Disconnect();
     }
 
     [PunRPC]
-    public void DiePC() { 
-
-        Destroy(gameObject); 
-
-    }
+    public void DieRPC() { 
+        Destroy(gameObject); }
 
     [PunRPC]
     public void WarriorAttackOn() => Attack.SetActive(true);
 
-    IEnumerator Dash() 
+    IEnumerator Dash() // 대쉬
     {
         speed = 20f;
         
@@ -148,7 +143,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
         speed = 6f;
     }
 
-    IEnumerator SuperBullet(float angle)
+    IEnumerator SuperBullet(float angle) // 슈퍼 총알
     {
         isSkill1 = true;
         bullet.speed = 65;
