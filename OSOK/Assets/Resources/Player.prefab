@@ -361,6 +361,9 @@ MonoBehaviour:
   bullet: {fileID: 8198037903695298963, guid: ed45b6fe3d766584e84fa6c8b5b1b2e8, type: 3}
   Attack: {fileID: 3942779766853240885}
   speed: 6
+  attackCoolTiem:
+  - 0.3
+  - 0
   skill1CoolTiem:
   - 3
   - 4

@@ -44,6 +44,9 @@ MonoBehaviour:
   - DiePC
   - DieRPC
   - ChatRPC
+  - Spawn
+  - RoomClose
+  - RoomBack
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

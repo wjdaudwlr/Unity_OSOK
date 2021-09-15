@@ -31,9 +31,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Text StatusText;
     public PhotonView PV;
     public Transform[] SpawnPosints;
+    public GameObject GameEndPanel;
+    public GameObject GameWinText;
+    public GameObject GameOverText;
+    public Player player;
 
     List<RoomInfo> myList = new List<RoomInfo>();
     int currentPage = 1, maxPage, multiple;
+    public int playerNum;
+    public bool isLive;
 
     #region 방리스트 갱신
     public void MyListClick(int num)
@@ -84,13 +90,30 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
 
     #region 서버연결
-    void Awake() => Screen.SetResolution(1920, 1080, true); // 해상도, 풀스크린
+    void Awake() { 
+        Screen.SetResolution(1920, 1080, true); // 해상도, 풀스크린
+    }
 
     void Update()
     {
         StatusText.text = PhotonNetwork.NetworkClientState.ToString();
         LobbyInfoText.text = (PhotonNetwork.CountOfPlayers - PhotonNetwork.CountOfPlayersInRooms) + "로비 /" + PhotonNetwork.CountOfPlayers + "접속";
         // 로비 수 : (접속한 플레이어수 - 방안에 있는 플레이어수) 접속 수 : 접속한 플레어어 수
+        if (playerNum == 1)
+        {
+            StartCoroutine(BackToRoom());
+            GameEndPanel.SetActive(true);
+            if (isLive)
+            {
+                GameWinText.SetActive(true);
+                GameOverText.SetActive(false); // 게임이 끝났으면 결과창 띄우기
+            }
+            else
+            {
+                GameWinText.SetActive(false);
+                GameOverText.SetActive(true);
+            }
+        }
     }
 
     public void Connect() => PhotonNetwork.ConnectUsingSettings(); 
@@ -109,8 +132,11 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        LobbyPanel.SetActive(false);
-        RoomPanel.SetActive(false);
+        if (LobbyPanel.activeSelf == true || RoomPanel.activeSelf == true)
+        {
+            LobbyPanel.SetActive(false);
+            RoomPanel.SetActive(false);
+        }
     }
 
     #endregion
@@ -196,10 +222,55 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void GameStart()
     {
+        PV.RPC("Spawn", RpcTarget.All);
+    }
+
+ 
+
+    IEnumerator BackToRoom()
+    {
+        yield return null;
+        playerNum = 0;
+        yield return new WaitForSeconds(2f);
+        PV.RPC("RoomBack", RpcTarget.All);
+
+    }
+
+    [PunRPC]
+    public void Spawn()
+    {
+        PhotonNetwork.Instantiate("Player", new Vector2(Random.Range(-10,10), Random.Range(-6.8f,6.5f)) , Quaternion.identity);
         DisconnectPanel.SetActive(false);
         LobbyPanel.SetActive(false);
         RoomPanel.SetActive(false);
-        
-            
+        playerNum = PhotonNetwork.PlayerList.Length;
+        isLive = true;
     }
+
+
+    [PunRPC]
+    void RoomBack()
+    {
+        GameEndPanel.SetActive(false);
+        DisconnectPanel.SetActive(true);
+        LobbyPanel.SetActive(true);
+        RoomPanel.SetActive(true);
+        RoomRenewal();
+        ChatInput.text = ""; // 채팅 입력창 초기화
+        for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = ""; // 채팅창 초기화
+        playerNum = 0;
+    }
+       
+    public void GunnerBtn()
+    {
+        player.champ = Player.Champion.Gunner;
+    }
+    
+    public void WarriorBtn()
+    {
+        player.champ = Player.Champion.Warrior;
+
+    }
+
+
 }
