@@ -33,7 +33,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     float[] attackCurTime;
 
     public AudioSource audio;
-
+    public float ajinjja;
     public enum Champion // 챔프
     {
         Gunner,
@@ -113,6 +113,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
                     }
                     else if (sDown2 && coolTime.canUseSkill2)
                     {
+                        // 거너 스킬2 : 슈류탄을 던짐 물론 자기도 맞음
                         PhotonNetwork.Instantiate("Grenade", transform.position, Quaternion.identity);
                         coolTime.UseSkill2((int)champ); 
                     }
@@ -127,6 +128,12 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
                         StartCoroutine(Dash());
                         coolTime.UseSkill1((int)champ);
                     }
+                    else if(sDown2 && coolTime.canUseSkill2) {
+                        // 워리어 스킬2 : 은신(무기는 들지못함)
+                        StartCoroutine(Cloaking());
+                        coolTime.UseSkill2((int)champ);
+                    }
+
 
                     break;
             } // 챔프
@@ -155,8 +162,19 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
 
 
     [PunRPC] // RPC를 사용해서 모든 사용자에게 보이게
-    public void WarriorAttackOn() => Attack.SetActive(true); // 워리어를 고르면 칼 SetActive(true)
+    public void WarriorAttackOn() { // 워리어를 고르면 칼 SetActive(true)
+        Attack.SetActive(true);
+        renderer.color = PV.IsMine ? Color.green : Color.red;
+    }
 
+    [PunRPC]
+    public void WarriorAttackOff() {
+
+        Attack.SetActive(false);
+        renderer.color = PV.IsMine ? new Color(0, 255, 0, 0.5f) : new Color(0, 255, 0, 0);
+    }
+
+   
     IEnumerator Dash() // 대쉬
     {
         speed = 20f;
@@ -166,15 +184,31 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
         speed = 6f;
     }
 
+    IEnumerator Cloaking() // 은신
+    {
+        PV.RPC("WarriorAttackOff", RpcTarget.All);
+
+        yield return new WaitForSeconds(1.5f);
+
+        PV.RPC("WarriorAttackOn", RpcTarget.All);
+    }
+
     IEnumerator SuperBullet(float angle) // 슈퍼 총알
     {
         isSkill1 = true;
         bullet.speed = 33;
         speed = 0;
-
+        
         yield return new WaitForSeconds(1f);
 
-        PhotonNetwork.Instantiate("Bullet", transform.position, Quaternion.AngleAxis(angle - 90, Vector3.forward));
+        
+        for (int i = 0; i < 2; i++)
+        {   
+            PhotonNetwork.Instantiate("Bullet", transform.position, Quaternion.AngleAxis(angle - 90 + Random.Range(-90,90), Vector3.forward));
+            yield return new WaitForSeconds(0.15f);
+        }
+
+
         speed = 6;
         bullet.speed = 11;
         isSkill1 = false;

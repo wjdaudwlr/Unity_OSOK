@@ -9,8 +9,6 @@ public class Grenade : MonoBehaviourPunCallbacks
 {
     Rigidbody2D rigid;
 
-    public CircleCollider2D collider;
-
     public GameObject effect;
     public PhotonView PV;
 
@@ -29,30 +27,21 @@ public class Grenade : MonoBehaviourPunCallbacks
         rigid.AddForce(dir, ForceMode2D.Impulse);
     }
 
-    private void Update()
-    {
-        
-    }
-
     IEnumerator Boom()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
         rigid.velocity /= 2;
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
         rigid.velocity = Vector2.zero;
         effect.SetActive(true);
-        collider.enabled = true;
 
-       
-
-        RaycastHit2D[] rayHit = Physics2D.CircleCastAll(transform.position, 6, Vector2.up, 0f, LayerMask.GetMask("Player"));
+        RaycastHit2D[] rayHit = Physics2D.CircleCastAll(transform.position, 2f, Vector2.zero, 0f, LayerMask.GetMask("Player"));
 
         foreach (RaycastHit2D hitObj in rayHit)
         {
-            Debug.Log("¾ÆÀ¸¾ß");
             if (hitObj.collider.gameObject.GetComponent<PhotonView>().IsMine)
             {
                 hitObj.collider.GetComponent<Player>().Hit();
@@ -60,18 +49,10 @@ public class Grenade : MonoBehaviourPunCallbacks
         }
 
         yield return new WaitForSeconds(0.25f);
-        collider.enabled = false;
-        Destroy(gameObject);
+        PV.RPC("DestroyRPC", RpcTarget.All);
     }
 
+    [PunRPC]
+    public void DestroyRPC() => Destroy(gameObject);
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.gameObject.tag == "Player" && collision.GetComponent<PhotonView>().IsMine && !PV.IsMine)
-        {
-            collision.GetComponent<Player>().Hit();
-
-            PV.RPC("DestroyRPC", RpcTarget.AllBuffered);
-        }
-    }
 }

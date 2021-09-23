@@ -462,6 +462,7 @@ MonoBehaviour:
   - 0.3
   - 0
   audio: {fileID: 630151426143377064}
+  ajinjja: 0
   champ: 0
 --- !u!58 &-8762575772099310087
 CircleCollider2D:

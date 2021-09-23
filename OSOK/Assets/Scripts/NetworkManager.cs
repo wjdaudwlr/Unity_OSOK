@@ -36,6 +36,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject GameOverText;
     public Player player;
     public AudioSource audio;
+    public GameObject gameStartBtn;
 
     List<RoomInfo> myList = new List<RoomInfo>();
     int currentPage = 1, maxPage, multiple;
@@ -227,8 +228,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void GameStart() // 게임 시작
     {
-        
-        PV.RPC("Spawn", RpcTarget.All);
+        PV.RPC("GameStartBtnOff", RpcTarget.AllBuffered);
+        PV.RPC("Spawn", RpcTarget.All); 
     }
 
  
@@ -254,7 +255,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         audio.Play();
        
     }
-
+    [PunRPC]
+    public void GameStartBtnOff() => gameStartBtn.SetActive(false);
 
     [PunRPC] // RPC를 사용해 모든 플레이어를 룸으로 돌아가게함
     void RoomBack()
@@ -263,6 +265,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         DisconnectPanel.SetActive(true);
         LobbyPanel.SetActive(true);
         RoomPanel.SetActive(true);
+        gameStartBtn.SetActive(true);
         RoomRenewal();
         ChatInput.text = ""; // 채팅 입력창 초기화
         for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = ""; // 채팅창 초기화
