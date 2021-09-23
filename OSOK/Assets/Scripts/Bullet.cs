@@ -8,8 +8,16 @@ public class Bullet : MonoBehaviourPunCallbacks
 {
     public PhotonView PV;
 
+    Rigidbody2D rigid;
 
     public int speed;
+
+    public bool isShotgun;
+
+    private void Awake()
+    {
+        rigid = GetComponent<Rigidbody2D>();
+    }
 
     void Start()
     {
@@ -40,6 +48,6 @@ public class Bullet : MonoBehaviourPunCallbacks
     [PunRPC]
     public void DestroyRPC() => Destroy(gameObject);
 
-
+  
 
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using Cinemachine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviourPunCallbacks, IPunObservable
 {
@@ -14,6 +15,8 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     SpriteRenderer renderer;
     Rigidbody2D rigid;
     NetworkManager NM ;
+    CoolTiem coolTime;
+
     public float speed;
 
     Vector3 curPos;
@@ -25,13 +28,12 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     bool isSkill1;
 
     public float[] attackCoolTiem;
-    public float[] skill1CoolTiem;
-    public float[] skill2CoolTiem;
+  
 
     float[] attackCurTime;
-    float[] skill1CurTime;
-    float[] skill2CurTime;
-    
+
+    public AudioSource audio;
+
     public enum Champion // 챔프
     {
         Gunner,
@@ -44,6 +46,8 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     {
         renderer = GetComponent<SpriteRenderer>();
         rigid = GetComponent<Rigidbody2D>();
+        NM = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+        coolTime = GameObject.Find("Skill1Btn").GetComponent<CoolTiem>();
 
         renderer.color = PV.IsMine ? Color.green : Color.red; // 상대는 빨간 나는 초록
 
@@ -56,22 +60,18 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
 
         if (PV.IsMine) if (champ == Champion.Warrior) PV.RPC("WarriorAttackOn", RpcTarget.AllBuffered); // 워리어면 무기 생성
 
-        skill1CurTime = new float[skill1CoolTiem.Length]; // 챔피언 수에 맞춰 쿨타임 생성
-        skill2CurTime = new float[skill2CoolTiem.Length];
+      
         attackCurTime = new float[attackCoolTiem.Length];
-    }
-    
-    void Start()
-    {
-        NM = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+
 
     }
+    
 
     void Update()
     {
         if (PV.IsMine)
         {
-            if(NM.playerNum == 1) // 게임이 끝나면 플레이어를 없앰
+            if(NM.playerNum == 1 && !NM.test) // 게임이 끝나면 플레이어를 없앰
             {
                 Hit();
             }
@@ -94,8 +94,7 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
             Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
             transform.rotation = rotation;
 
-            attackCurTime[(int)champ] += Time.deltaTime; // 기본 공격 공격속도
-            skill1CurTime[(int)champ] += Time.deltaTime; // 스킬 쿨타임
+            attackCurTime[(int)champ] += Time.deltaTime; // 기본공격 쿨타임
 
             switch (champ) 
             {
@@ -106,26 +105,31 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
                         PhotonNetwork.Instantiate("Bullet", transform.position, Quaternion.AngleAxis(angle - 90, Vector3.forward));
                         attackCurTime[(int)champ] = 0;
                     }
-                    else if (sDown1 && skill1CurTime[(int)champ] > skill1CoolTiem[(int)champ]) // 스나이퍼
+                    else if (sDown1 && coolTime.canUseSkill1) 
                     {
+                        // 거너 스킬1  : 슈퍼총알(일정시간 멈추고 지정한 방향에 빠른속도로 총알을 날림)
                         StartCoroutine(SuperBullet(angle));
-                        skill1CurTime[(int)champ] = 0;
+                        coolTime.UseSkill1((int)champ);
                     }
-
+                    else if (sDown2 && coolTime.canUseSkill2)
+                    {
+                        PhotonNetwork.Instantiate("Grenade", transform.position, Quaternion.identity);
+                        coolTime.UseSkill2((int)champ); 
+                    }
                     break;   
 
                 case Champion.Warrior: // ---워리어---
 
-
-                    if (sDown1 && skill1CurTime[(int)champ] > skill1CoolTiem[(int)champ]) // 워리어 스킬1 : 대쉬
+                    if (sDown1 && coolTime.canUseSkill1) 
                     {
+                        // 워리어 스킬1 : 대쉬(순간적으로 이동속도를 극대화)
+                        audio.Play();
                         StartCoroutine(Dash());
-                        skill1CurTime[(int)champ] = 0;
+                        coolTime.UseSkill1((int)champ);
                     }
 
                     break;
             } // 챔프
-
 
         }
         // IsMine이 아닌 것들은 부드럽게 위치동기화
@@ -136,22 +140,22 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
 
     public void Hit() // 플레이어 히트
     {
-        NM.isLive = false;
-        PV.RPC("DieRPC",RpcTarget.AllBuffered);
+
+        PhotonNetwork.Instantiate("DeathEffect", gameObject.transform.position, Quaternion.identity);
+        NM.isLive = false; // 죽음
+        PV.RPC("DieRPC", RpcTarget.All);
     }
 
-    [PunRPC]
-    public void DieRPC() {
-        
-        NM.playerNum--;
-        Destroy(gameObject);
+    [PunRPC] // RPC를 사용해서 모든 사용자에게서 삭제
+    public void DieRPC() { // 플레이어 죽음
+
+        NM.playerNum--; // 생존 수를 줄인다
+        Destroy(gameObject); // 오브젝트 삭제
     }
 
 
-    
-
-    [PunRPC]
-    public void WarriorAttackOn() => Attack.SetActive(true);
+    [PunRPC] // RPC를 사용해서 모든 사용자에게 보이게
+    public void WarriorAttackOn() => Attack.SetActive(true); // 워리어를 고르면 칼 SetActive(true)
 
     IEnumerator Dash() // 대쉬
     {
@@ -165,12 +169,10 @@ public class Player : MonoBehaviourPunCallbacks, IPunObservable
     IEnumerator SuperBullet(float angle) // 슈퍼 총알
     {
         isSkill1 = true;
-        bullet.speed = 65;
+        bullet.speed = 33;
         speed = 0;
 
-
-        yield return new WaitForSeconds(1.2f);
-
+        yield return new WaitForSeconds(1f);
 
         PhotonNetwork.Instantiate("Bullet", transform.position, Quaternion.AngleAxis(angle - 90, Vector3.forward));
         speed = 6;

@@ -35,11 +35,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public GameObject GameWinText;
     public GameObject GameOverText;
     public Player player;
+    public AudioSource audio;
 
     List<RoomInfo> myList = new List<RoomInfo>();
     int currentPage = 1, maxPage, multiple;
     public int playerNum;
     public bool isLive;
+    bool playGame;
+    public bool test = false;
 
     #region 방리스트 갱신
     public void MyListClick(int num)
@@ -92,6 +95,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #region 서버연결
     void Awake() { 
         Screen.SetResolution(1920, 1080, true); // 해상도, 풀스크린
+        PhotonNetwork.SendRate = 60;
+        PhotonNetwork.SerializationRate = 30;
     }
 
     void Update()
@@ -99,7 +104,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         StatusText.text = PhotonNetwork.NetworkClientState.ToString();
         LobbyInfoText.text = (PhotonNetwork.CountOfPlayers - PhotonNetwork.CountOfPlayersInRooms) + "로비 /" + PhotonNetwork.CountOfPlayers + "접속";
         // 로비 수 : (접속한 플레이어수 - 방안에 있는 플레이어수) 접속 수 : 접속한 플레어어 수
-        if (playerNum == 1)
+        if (playerNum == 1 && !test)
         {
             StartCoroutine(BackToRoom());
             GameEndPanel.SetActive(true);
@@ -220,14 +225,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     #endregion
 
 
-    public void GameStart()
+    public void GameStart() // 게임 시작
     {
+        
         PV.RPC("Spawn", RpcTarget.All);
     }
 
  
 
-    IEnumerator BackToRoom()
+    IEnumerator BackToRoom() // 코루틴을 사용해 게임이 끝나면 2초뒤 모든 사용자가 방으로 돌아감
     {
         yield return null;
         playerNum = 0;
@@ -236,7 +242,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     }
 
-    [PunRPC]
+    [PunRPC] // 플레이어를 랜덤한 좌표로 생성하고 생존한 플레이어 숫자를 플레이어 리스트 길이로 초기화
     public void Spawn()
     {
         PhotonNetwork.Instantiate("Player", new Vector2(Random.Range(-10,10), Random.Range(-6.8f,6.5f)) , Quaternion.identity);
@@ -245,10 +251,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         RoomPanel.SetActive(false);
         playerNum = PhotonNetwork.PlayerList.Length;
         isLive = true;
+        audio.Play();
+       
     }
 
 
-    [PunRPC]
+    [PunRPC] // RPC를 사용해 모든 플레이어를 룸으로 돌아가게함
     void RoomBack()
     {
         GameEndPanel.SetActive(false);
@@ -259,18 +267,23 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         ChatInput.text = ""; // 채팅 입력창 초기화
         for (int i = 0; i < ChatText.Length; i++) ChatText[i].text = ""; // 채팅창 초기화
         playerNum = 0;
+        audio.Stop();
     }
        
-    public void GunnerBtn()
+    public void ChampChoice(int num)
     {
-        player.champ = Player.Champion.Gunner;
+        switch (num)
+        {
+            case 0:
+                player.champ = Player.Champion.Gunner;
+                break;
+            case 1:
+                player.champ = Player.Champion.Warrior;
+                break;
+        }
     }
-    
-    public void WarriorBtn()
-    {
-        player.champ = Player.Champion.Warrior;
 
-    }
+
 
 
 }

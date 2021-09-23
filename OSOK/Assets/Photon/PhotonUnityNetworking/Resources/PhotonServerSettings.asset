@@ -34,19 +34,17 @@ MonoBehaviour:
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
+  - ChatRPC
   - ClickRpc
   - DestroyRpc
+  - DestroyRPC
   - DestroySpaceship
+  - DieRPC
   - Fire
   - RespawnSpaceship
-  - DestroyRPC
-  - WarriorAttackOn
-  - DiePC
-  - DieRPC
-  - ChatRPC
-  - Spawn
-  - RoomClose
   - RoomBack
+  - Spawn
+  - WarriorAttackOn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

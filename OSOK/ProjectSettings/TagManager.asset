@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Box
   - Bullet
+  - Grenade
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - 
   - Player
   - Bullet
-  - 
+  - Grenade
   - 
   - 
   - 
