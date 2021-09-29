@@ -37,6 +37,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public Player player;
     public AudioSource audio;
     public GameObject gameStartBtn;
+    public Text winnerPlayerText;
 
     List<RoomInfo> myList = new List<RoomInfo>();
     int currentPage = 1, maxPage, multiple;
@@ -121,6 +122,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
             }
         }
     }
+
 
     public void Connect() => PhotonNetwork.ConnectUsingSettings(); 
 

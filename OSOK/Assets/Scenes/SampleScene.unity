@@ -3684,6 +3684,7 @@ MonoBehaviour:
   player: {fileID: 8600022637732819191, guid: 9bff6324db9f172468f22de1770cb9a5, type: 3}
   audio: {fileID: 55928462}
   gameStartBtn: {fileID: 1714635217}
+  winnerPlayerText: {fileID: 0}
   playerNum: 0
   isLive: 0
   test: 0

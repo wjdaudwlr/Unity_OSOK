@@ -42,9 +42,10 @@ public class Grenade : MonoBehaviourPunCallbacks
 
         foreach (RaycastHit2D hitObj in rayHit)
         {
-            if (hitObj.collider.gameObject.GetComponent<PhotonView>().IsMine)
+            if (hitObj.transform.gameObject.GetComponent<PhotonView>().IsMine && !PV.IsMine)
             {
-                hitObj.collider.GetComponent<Player>().Hit();
+                hitObj.transform.GetComponent<Player>().Hit();
+               
             }
         }
 
